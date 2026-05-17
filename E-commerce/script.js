@@ -7,17 +7,24 @@ let cart = savedCart ? JSON.parse(savedCart) : [];
 let total = 0;
 
 cart.forEach((product) => {
-    total = total + Number(product.price);
+total = total + (Number(product.price) * product.quantity);
 });
 console.log(total);
 
 const totalAmount = document.getElementById("total-amount");
-totalAmount.textContent = `$${total.toFixed(2)}`;
+if(totalAmount){
+
+    totalAmount.textContent = `$${total.toFixed(2)}`;
+
+}
 
 // Select all Add to Cart buttons
 const buttons = document.querySelectorAll(".add-btn");
 
 // Loop through all buttons
+
+if(buttons.length > 0){
+
 buttons.forEach((button) => {
 
     // Listen for click event
@@ -30,11 +37,20 @@ buttons.forEach((button) => {
         const product = {
             name: productCard.dataset.name,
             price: productCard.dataset.price,
-            image: productCard.dataset.image
+            image: productCard.dataset.image,
+            quantity: 1
         };
 
         // Add product into cart array
-        cart.push(product);
+        const existingProduct = cart.find((item) => {
+            return item.name === product.name;
+        });
+        if(existingProduct){
+            existingProduct.quantity++;
+        }
+        else{
+            cart.push(product);
+        }
 
         // Save updated cart into localStorage
         localStorage.setItem("cart", JSON.stringify(cart));
@@ -46,7 +62,7 @@ buttons.forEach((button) => {
     });
 
 });
-
+};
 const container = document.getElementById("cart-container");  
 
 cart.forEach((product) => {
@@ -58,6 +74,14 @@ cart.forEach((product) => {
         <div class="cart-details">
             <h3>${product.name}</h3>
             <p>$${product.price}</p>
+            <div class="quantity-controls">
+                <button class="decrease-qty" data-name="${product.name}">-</button>
+
+                <span>${product.quantity}</span>
+
+                <button class="increase-qty" data-name="${product.name}">+</button>
+
+            </div>
         </div>
 
         <button class="remove-btn">Remove</button>       
@@ -78,6 +102,58 @@ removeButtons.forEach(button => {
         cart = cart.filter((product) => {
             return product.name !== productName;
         });
+
         localStorage.setItem("cart", JSON.stringify(cart));
+
+        location.reload();
     })
 })
+
+const increaseButton = document.querySelectorAll(".increase-qty");  
+
+increaseButton.forEach((button) => {
+    button.addEventListener("click", (e) => {
+        const productName = e.target.dataset.name;
+
+        const product = cart.find((item) => {
+            return item.name === productName;
+        });
+        product.quantity++;
+
+        localStorage.setItem("cart", JSON.stringify(cart)); 
+
+        location.reload();
+    })
+});
+
+const decreaseButtons = document.querySelectorAll('.decrease-qty');
+
+decreaseButtons.forEach((button) => {
+    button.addEventListener("click", (e) => {
+        const productName = e.target.dataset.name;
+
+        const product = cart.find((item) => {
+            return item.name === productName;
+        });
+        product.quantity--;
+        if(product.quantity <= 0) {
+            cart = cart.filter((item) => {
+                return item.name !== productName;
+            });
+
+            localStorage.setItem("cart", JSON.stringify(cart));
+
+            location.reload();
+        }
+    })
+})
+
+
+const totalPriceElement = document.querySelector("#total-price p");
+
+if (totalPriceElement) {
+
+    totalPriceElement.innerText = `$${total.toFixed(2)}`;
+
+}
+
